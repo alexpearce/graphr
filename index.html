@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Graphr Demo</title>
+  
+  <link rel="stylesheet" href="demo.css">
+  
+  <script src="raphael.js"></script>
+  <script src="graphr.js"></script>
+  <script>
+    var linear    = function(x) { return x; },
+        quadratic = function(x) { return x*x; },
+        sin       = function(x) { return Math.sin(2 * Math.PI * (x)); },
+        cos       = function(x) { return Math.cos(2 * Math.PI * (x)); },
+        points  = [],
+        points2 = [],
+        points3 = [],
+        points4 = [];
+    
+    for (var i = 0; i <= 50; i++) {
+      var x = i / 50;
+      points.push([x, sin(x)]);
+      points2.push([x, cos(x)]);
+      points3.push([x, linear(x)]);
+      points4.push([x, quadratic(x)]);
+    }
+    document.addEventListener("DOMContentLoaded", function() {
+      var grapher = Graphr.init("canvas", 640, 480)
+      grapher.settings.drawPoints = false;
+      grapher.settings.smooth = false;
+      grapher.plot(points).plot(points2).plot(points3).plot(points4);
+    });
+  </script>
+</head>
+<body>
+  <div id="canvas"></div>
+</body>
+</html>
