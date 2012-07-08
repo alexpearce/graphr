@@ -95,11 +95,10 @@
       this.paper.rect(0, 0, this.settings.width, this.settings.height, 0).attr({fill: "#fff", "stroke-width": 1});
       // The area the plot will reside in
       this.plotBox = this.paper.rect(
-        // We add a pixel on to make sure points on the boundary return true for isPointInside
-        this.settings.padding.top - 1,
-        this.settings.padding.left - 1,
-        this.properties.innerWidth + 2,
-        this.properties.innerHeight + 2,
+        this.settings.padding.top,
+        this.settings.padding.left,
+        this.properties.innerWidth,
+        this.properties.innerHeight,
         0
       ).attr({fill: this.settings.backgroundColour, stroke: "#fff"});
 
@@ -118,6 +117,9 @@
       // Are we drawing a curve yet?
       var drawingCurve = false,
           pathString = "",
+          // The set of points to be drawn
+          points = this.paper.set(),
+          // The colour of the curve and its points
           colour = this.settings.colours[this.nextColourIndex()],
           // Indexes
           i = 0,
@@ -126,8 +128,8 @@
 
       for (i; i < data.length; i++) {
         scaledCoords = this.scaledCoordinates(data[i][0], data[i][1]);
-
-        if (this.plotBox.isPointInside(scaledCoords[0], scaledCoords[1]) === true) {
+        
+        if (this.isPointInsidePlot(scaledCoords[0], scaledCoords[1]) === true) {
           if (drawingCurve === false) {
             // Start drawing!
             pathString = "M " + scaledCoords[0] + " " + scaledCoords[1];
@@ -142,23 +144,20 @@
               pathString += "L" + scaledCoords[0] + " " + scaledCoords[1];
             }
           }
+          
+          if (this.settings.drawPoints === true) {
+            // Add the points to the set
+            points.push(this.shapes.point(scaledCoords[0], scaledCoords[1], 5, colour));
+            points.push(this.shapes.point(scaledCoords[0], scaledCoords[1], 2, this.settings.backgroundColour, "none", 0));
+          }
         }
       }
 
       // If the path isn't empty, draw it
       if (pathString !== "") { this.shapes.path(pathString, colour); }
-
-      // I don't like having this loop and function call twice, but I need to construct
-      // the path string and create the path before the points in order to have the points
-      // on top of the path
-      if (this.settings.drawPoints === true) {
-        for (j = 0; j < data.length; j++) {
-          scaledCoords = this.scaledCoordinates(data[j][0], data[j][1]);
-
-          this.shapes.point(scaledCoords[0], scaledCoords[1], 5, colour);
-          this.shapes.point(scaledCoords[0], scaledCoords[1], 2, this.settings.backgroundColour, "none", 0);
-        }
-      }
+      
+      // Move the points in front of the curve.
+      points.toFront();
 
       return this;
     },
@@ -238,6 +237,15 @@
                      // Expand this bracket out to make it more obvious, if you like
                      - ((y - this.properties.extrema.yMin) * this.properties.yScale);
       return [scaled_x, scaled_y];
+    },
+    
+    // Returns true if the (x, y) coordinate is inside the plot boundarys
+    isPointInsidePlot: function (x, y) {
+      return true;
+      return (x >= this.settings.padding.left) &&
+             (x <= (this.settings.padding.left + this.properties.innerWidth)) &&
+             (y >= this.settings.padding.top) &&
+             (y <= (this.settings.padding.top + this.properties.innerHeight));
     },
 
     // Returns the next colour index, looping back around if we've reached the end of the colour array
